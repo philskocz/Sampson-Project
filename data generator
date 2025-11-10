@@ -1,0 +1,70 @@
+// Fake Sampson Data Generator
+// Press SPACE to generate more rows
+// Press 'S' to save to fake_sampson_data.csv
+
+int numStations = 3;
+String[] stationNames = {
+  "Sampson 101",
+  "Sampson 203",
+  "Sampson Lab"
+};
+
+String[] rows;   // all generated rows
+int timeStep = 0;
+
+void setup() {
+  size(900, 400);
+  textFont(createFont("SansSerif", 18));
+  textAlign(LEFT, TOP);
+
+  // header row for CSV
+  rows = new String[1];
+  rows[0] = "timeStep,station,tempF,humidity";
+}
+
+void draw() {
+  background(245);
+
+  fill(0);
+  text("Fake Sampson Data Generator", 20, 20);
+  text("SPACE: generate more data     S: save CSV", 20, 50);
+
+  // show last few lines
+  int maxLinesToShow = 12;
+  int start = max(rows.length - maxLinesToShow, 1); // skip header for display
+
+  float y = 90;
+  fill(30);
+  text("Latest data:", 20, y);
+  y += 25;
+
+  for (int i = start; i < rows.length; i++) {
+    text(rows[i], 20, y);
+    y += 22;
+  }
+}
+
+void keyPressed() {
+  if (key == ' ') {
+    generateBatch();
+  } else if (key == 's' || key == 'S') {
+    saveStrings("fake_sampson_data.csv", rows);
+    println("Saved to fake_sampson_data.csv");
+  }
+}
+
+// create one reading per station at current timeStep
+void generateBatch() {
+  for (int i = 0; i < numStations; i++) {
+    float temp = random(66, 76);   // fake temperature
+    float hum  = random(25, 65);   // fake humidity
+
+    String line = timeStep + "," +
+                  stationNames[i] + "," +
+                  nf(temp, 1, 1) + "," +
+                  nf(hum, 1, 1);
+
+    rows = append(rows, line);
+  }
+  timeStep++;
+}
