@@ -1,0 +1,156 @@
+ //Sampson Data Line Chart
+// SPACE = generate new data
+// S = save CSV
+// Displays live-updating temperature graph with labels
+
+int numStations = 3;
+String[] stationNames = {
+  "Sampson 101",
+  "Sampson 203",
+  "Sampson Lab"
+};
+
+String[] rows;
+int timeStep = 0;
+Table table;
+
+color[] stationColors = {
+  color(230, 57, 70),   // red
+  color(29, 53, 87),    // blue
+  color(42, 157, 143)   // teal
+};
+
+void setup() {
+  size(900, 500);
+  textFont(createFont("SansSerif", 14));
+  textAlign(LEFT, TOP);
+  rows = new String[1];
+  rows[0] = "timeStep,station,tempF,humidity";
+}
+
+void draw() {
+  background(245);
+  
+  fill(0);
+  textSize(22);
+  text("Sampson Station Temperature Chart", 20, 20);
+  textSize(14);
+  text("SPACE = add data   S = save CSV", 20, 50);
+
+  if (table != null) {
+    drawChart();
+  }
+}
+
+// Generate fake readings and update the table
+void keyPressed() {
+  if (key == ' ') {
+    generateBatch();
+    saveStrings("fake_sampson_data.csv", rows);
+    table = loadTable("fake_sampson_data.csv", "header");
+  } else if (key == 's' || key == 'S') {
+    saveStrings("fake_sampson_data.csv", rows);
+    println("Saved to fake_sampson_data.csv");
+  }
+}
+
+// Create one reading per station at current time step
+void generateBatch() {
+  for (int i = 0; i < numStations; i++) {
+    float temp = random(66, 76);
+    float hum = random(25, 65);
+    String line = timeStep + "," +
+                  stationNames[i] + "," +
+                  nf(temp, 1, 1) + "," +
+                  nf(hum, 1, 1);
+    rows = append(rows, line);
+  }
+  timeStep++;
+}
+
+// Draw temperature line chart
+void drawChart() {
+  float left = 80;
+  float right = width - 60;
+  float top = 100;
+  float bottom = height - 80;
+
+  // Axes
+  stroke(0);
+  strokeWeight(1);
+  line(left, top, left, bottom);
+  line(left, bottom, right, bottom);
+
+  // Y-axis grid and labels
+  fill(0);
+  textSize(12);
+  stroke(200);
+  for (int t = 60; t <= 80; t += 2) {
+    float y = map(t, 60, 80, bottom, top);
+    line(left, y, right, y);
+    fill(80);
+    text(t + "°F", 30, y - 6);
+  }
+
+  // Axis titles
+  fill(0);
+  textSize(16);
+  textAlign(CENTER);
+  text("Temperature (°F)", 50, top - 40);
+  text("Time Step", width / 2, height - 40);
+  textAlign(LEFT, TOP);
+
+  // Plot for each station
+  for (int s = 0; s < stationNames.length; s++) {
+    String station = stationNames[s];
+    Table filtered = new Table();
+    filtered.addColumn("timeStep");
+    filtered.addColumn("tempF");
+
+    for (TableRow row : table.rows()) {
+      if (row.getString("station").equals(station)) {
+        TableRow newRow = filtered.addRow();
+        newRow.setFloat("timeStep", row.getFloat("timeStep"));
+        newRow.setFloat("tempF", row.getFloat("tempF"));
+      }
+    }
+
+    // Draw line
+    stroke(stationColors[s]);
+    strokeWeight(2);
+    noFill();
+    beginShape();
+    for (TableRow r : filtered.rows()) {
+      float t = r.getFloat("timeStep");
+      float temp = r.getFloat("tempF");
+      float x = map(t, 0, max(1, timeStep), left, right);
+      float y = map(temp, 60, 80, bottom, top);
+      vertex(x, y);
+    }
+    endShape();
+
+    // Draw data points
+    fill(stationColors[s]);
+    noStroke();
+    for (TableRow r : filtered.rows()) {
+      float t = r.getFloat("timeStep");
+      float temp = r.getFloat("tempF");
+      float x = map(t, 0, max(1, timeStep), left, right);
+      float y = map(temp, 60, 80, bottom, top);
+      circle(x, y, 6);
+    }
+
+    // Add label for latest value
+    if (filtered.getRowCount() > 0) {
+      TableRow last = filtered.getRow(filtered.getRowCount() - 1);
+      float lastT = last.getFloat("timeStep");
+      float lastTemp = last.getFloat("tempF");
+      float x = map(lastT, 0, max(1, timeStep), left, right);
+      float y = map(lastTemp, 60, 80, bottom, top);
+      fill(stationColors[s]);
+      textAlign(LEFT, CENTER);
+      text(station + ": " + nf(lastTemp, 1, 1) + "°F", x + 10, y - 5);
+      textAlign(LEFT, TOP);
+    }
+  }
+}
