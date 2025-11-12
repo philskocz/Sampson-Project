@@ -1,3 +1,1 @@
-# Sampson-Project
-
-[APCSA Initial Idea Session](https://github.com/joswald-khs/Sampson-Project/blob/main/ideas/apcsa.md)
+My visualization is a dashboard showing data from three Sampson floors, outside weather, and climate control systems. It includes a map of Sampson, time-series graphs for temperature and humidity, station info cards, and a heatmap to show room conditions. I learned how to organize and display complex data clearly, but I could not figure out how to connect live data or add interactivity. I would improve it by making it update in real time and letting users click to explore the data a bit better.
